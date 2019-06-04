@@ -3,18 +3,53 @@ import { GraphQLServer } from 'graphql-yoga';
 // Type definitions (schema)
 const typeDefs = `
   type Query {
-    hello: String!
+    greeting(name: String, position: String): String!
+    sum(a: Int, b: Int): Int!
+    me: User!
+    post: Post!
+  }
+
+  type User {
+    id: ID!
     name: String!
+    email: String!
+    age: Int
+  }
+
+  type Post {
+    id: ID!
+    title: String!
+    body: String!
+    published: Boolean!
   }
 `
 // Resolvers
 const resolvers = {
   Query: {
-    hello() {
-      return 'This is my first query!'
+    greeting(parent, args, context, info) {
+      if (args.name && args.position) {
+        return `Hello ${args.name}, you position is ${args.position}`
+      }
+
+      return 'Hello'
     },
-    name() {
-      return 'Shian Huang'
+    sum(parent, args, context, info) {
+      return args.a + args.b
+    },
+    me() {
+      return {
+        id: '123',
+        name: 'Mike',
+        email: 'mike@example.com'
+      }
+    },
+    post() {
+      return {
+        id: '456',
+        title: 'title',
+        body: 'This is body',
+        published: true
+      }
     }
   }
 }
@@ -24,6 +59,6 @@ const server = new GraphQLServer({
   resolvers
 });
 
-server.start(() => {
-  console.log('The server is up!')
+server.start(({ port }) => {
+  console.log(`The server is up at ${JSON.stringify(port)}`)
 })
