@@ -9,15 +9,18 @@ const users = [{
   id: '1',
   name: 'Andrew',
   email: 'andrew@example.com',
-  age: 27
+  age: 27,
+  comment: '13'
 }, {
   id: '2',
   name: 'Sarah',
-  email: 'sarah@example.com'
+  email: 'sarah@example.com',
+  comment: '14'
 }, {
   id: '3',
   name: 'Mike',
-  email: 'mike@example.com'
+  email: 'mike@example.com',
+  comment: '15'
 }]
 
 const posts = [{
@@ -43,19 +46,23 @@ const posts = [{
 const comments = [
   {
     id: '13',
-    text: 'First comment'
+    text: 'First comment',
+    author: '1'
   },
   {
     id: '14',
-    text: 'Second comment'
+    text: 'Second comment',
+    author: '1'
   },
   {
     id: '14',
-    text: 'Third comment'
+    text: 'Third comment',
+    author: '2'
   },
   {
     id: '15',
-    text: 'Fourth comment'
+    text: 'Fourth comment',
+    author: '3'
   }
 ]
 
@@ -75,6 +82,7 @@ const typeDefs = `
     email: String!
     age: Int
     posts: [Post!]!
+    comment: [Comment]
   }
 
   type Post {
@@ -88,6 +96,7 @@ const typeDefs = `
   type Comment {
     id: ID!
     text: String!
+    author: User!
   }
 `
 
@@ -145,8 +154,20 @@ const resolvers = {
       return posts.filter(post => {
         return post.author === parent.id
       })
+    },
+    comment(parent, args, ctx, info) {
+      return comments.filter(comment => {
+        return comment.id === parent.comment
+      })
     }
-  }
+  },
+  Comment: {
+    author(parent, args, ctx, info) {
+      return users.find((user) => {
+        return user.id === parent.author
+      })
+    }
+  },
 }
 
 const server = new GraphQLServer({
