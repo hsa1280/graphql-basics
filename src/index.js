@@ -7,7 +7,7 @@ import uuid from 'uuid/v4';
 // Scalar types - String, Boolean, Int, Float, ID
 
 // Demo user data
-const users = [{
+let users = [{
   id: '1',
   name: 'Andrew',
   email: 'andrew@example.com',
@@ -25,7 +25,7 @@ const users = [{
   comment: '15'
 }]
 
-const posts = [{
+let posts = [{
   id: '10',
   title: 'GraphQL 101',
   body: 'This is how to use GraphQL...',
@@ -45,7 +45,7 @@ const posts = [{
   author: '2'
 }]
 
-const comments = [
+let comments = [
   {
     id: '13',
     text: 'First comment',
@@ -73,6 +73,7 @@ const comments = [
 ]
 
 // Type definitions (schema)
+// Input type only has calar types - String, Boolean, Int, Float, ID 
 const typeDefs = `
   type Query {
     users(query: String): [User!]!
@@ -83,9 +84,29 @@ const typeDefs = `
   }
 
   type Mutation {
-    createUser(name: String!, email: String!, age: Int): User!
-    createPost(title: String!, body: String!, published: Boolean!, author: ID!): Post!
-    createComment(text: String!, author: ID!, post: ID!): Comment
+    createUser(data: CreateUserInput!): User!
+    createPost(data: CreatePostInput!): Post!
+    createComment(data: CreateCommentInput!): Comment
+    deleteUser(id: ID!): User!
+  }
+
+  input CreateUserInput {
+    name: String!
+    email: String!
+    age: Int
+  }
+
+  input CreatePostInput {
+    title: String!
+    body: String!
+    published: Boolean!
+    author: ID!
+  }
+
+  input CreateCommentInput {
+    text: String!
+    post: ID!
+    author: ID!
   }
 
   type User {
@@ -158,14 +179,14 @@ const resolvers = {
   },
   Mutation: {
     createUser(parent, args, ctx, info) {
-      const emailTaken = users.some(user => user.email === args.email);
+      const emailTaken = users.some(user => user.email === args.data.email);
       if (emailTaken) {
         throw new Error('Email taken');
       }
 
       const user = {
         id: uuid(),
-        ...agrs
+        ...args.data
       }
 
       users.push(user);
@@ -173,7 +194,7 @@ const resolvers = {
       return user;
     },
     createPost(parent, args, ctx, info) {
-      const userExists = users.some(user => user.id === args.author);
+      const userExists = users.some(user => user.id === args.data.author);
 
       if (!userExists) {
         throw new Error('User not found');
@@ -181,7 +202,7 @@ const resolvers = {
 
       const post = {
         id: uuid(),
-        ...args
+        ...args.data
       }
 
       posts.push(post);
@@ -189,13 +210,13 @@ const resolvers = {
       return post;
     },
     createComment(parent, args, ctx, info) {
-      const userExists = users.some(user => user.id === args.author);
+      const userExists = users.some(user => user.id === args.data.author);
       
       if (!userExists) {
         throw new Error("Can't find the user");
       }
 
-      const postExists = posts.some(post => post.id === args.post && post.published);
+      const postExists = posts.some(post => post.id === args.data.post && post.published);
 
       if (!postExists) {
         throw new Error("Can't find the post");
@@ -203,12 +224,35 @@ const resolvers = {
 
       const comment = {
         id: uuid(),
-        ...args
+        ...args.data
       }
 
       comments.push(comment);
 
       return comment;
+    },
+    deleteUser(parent, args, ctx, info) {
+      const userIndex = users.findIndex(user => user.id === args.id);
+
+      if (userIndex === -1) {
+        throw new Error('User not found');
+      }
+
+      const deletedUser = users.splice(userIndex, 1);
+
+      posts = posts.filter(post => {
+        const match = post.author === args.id;
+
+        if (match) {
+          comments = comments.filter(comment => comment.post !== post.id)
+        }
+
+        return !match;
+      });
+
+      comments = comments.filter(comment => comment.author !== args.id);
+
+      return deletedUser[0];
     }
   },
   Post: {
