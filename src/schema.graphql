@@ -15,11 +15,18 @@ type Query {
     deleteUser(id: ID!): User!
     deleteComment(id: ID!): Comment!
     deletePost(id: ID!): Post!
+    updateUser(id: ID!, data: UpdateUserInput!): User!
   }
 
   input CreateUserInput {
     name: String!
     email: String!
+    age: Int
+  }
+
+  input UpdateUserInput {
+    name: String
+    email: String
     age: Int
   }
 
