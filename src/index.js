@@ -88,6 +88,8 @@ const typeDefs = `
     createPost(data: CreatePostInput!): Post!
     createComment(data: CreateCommentInput!): Comment
     deleteUser(id: ID!): User!
+    deleteComment(id: ID!): Comment!
+    deletePost(id: ID!): Post!
   }
 
   input CreateUserInput {
@@ -253,6 +255,30 @@ const resolvers = {
       comments = comments.filter(comment => comment.author !== args.id);
 
       return deletedUser[0];
+    },
+    deletePost(parent, args, ctx, info) {
+      const postIndex = posts.findIndex(post => post.id === args.id);
+
+      if (postIndex === -1) {
+        throw new Error("Post not found");
+      }
+
+      const deletePosts = posts.splice(postIndex, 1);
+
+      comments = comments.filter(comment => comment.post !== args.id);
+
+      return deletePosts[0];
+    },
+    deleteComment(parent, args, ctx, info) {
+      const commentIndex = comments.findIndex(comment => comment.id === args.id);
+
+      if (commentIndex === -1) {
+        throw new Error("Comment not found");
+      }
+
+      const deletedComments = comments.splice(commentIndex, 1);
+
+      return deletedComments[0];
     }
   },
   Post: {
