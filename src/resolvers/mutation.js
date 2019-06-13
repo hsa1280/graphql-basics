@@ -128,6 +128,26 @@ const Mutation = {
     }
 
     return user;
+  },
+  updatePost(parent, args, { db }, info) {
+    const { id, data } = args;
+    const post = db.posts.find(post => post.id === id);
+
+    if (!post) {
+      throw new Error("Post not found");
+    }
+
+    if (data.title) {
+      post.title = data.title;
+    }
+
+    if (data.body) {
+      post.body = data.body;
+    }
+
+    post.published = data.published;
+
+    return post;
   }
 }
 
